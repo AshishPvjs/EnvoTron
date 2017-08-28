@@ -1,11 +1,11 @@
 package com.example.lenovo.envotron;
 
+import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,7 +18,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 
-public class GraphActivity extends AppCompatActivity implements SensorEventListener {
+public class GraphPlot extends AppCompatActivity implements SensorEventListener {
 
 
     int [] sensorList;
@@ -27,11 +27,18 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
     LineGraphSeries<DataPoint>[] sensorViews;
     private final int maxData = 200;
     int [] lastx;
-
+    private SensorManager Sm;
+    private Sensor lightSensor,accelSensor,proxySensor,tempSensor;
+    private TextView  lightValue,accelValue,proxyValue,tempValue;
+    public LineGraphSeries<DataPoint> series, series2, series3, series4;
+    public int a=0;
+    public int b=0;
+    public int c=0;
+    public int d=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_graph);
+        setContentView(R.layout.activity_graph_plot);
         sensorList = new int[]{-1, -1, -1, -1};
         lastx = new int[]{0, 0, 0, 0};
         sensors = new int[]{Sensor.TYPE_LIGHT, Sensor.TYPE_PRESSURE, Sensor.TYPE_AMBIENT_TEMPERATURE, Sensor.TYPE_RELATIVE_HUMIDITY, Sensor.TYPE_ACCELEROMETER, Sensor.TYPE_GYROSCOPE, Sensor.TYPE_MAGNETIC_FIELD, Sensor.TYPE_PROXIMITY};
@@ -55,25 +62,15 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
             if(count==4) break;
         }
 
-        TextView l1, l2, l3, l4;
-        l1 = findViewById(R.id.lv1);
-        l2 = findViewById(R.id.lv2);
-        l3 = findViewById(R.id.lv3);
-        l4 = findViewById(R.id.lv4);
-        LineGraphSeries<DataPoint> series, series2, series3, series4;
         series = new LineGraphSeries<>();
         series2 = new LineGraphSeries<>();
         series3 = new LineGraphSeries<>();
         series4 = new LineGraphSeries<>();
-        series.appendData(new DataPoint(0, 0), true, maxData);
-        series2.appendData(new DataPoint(0, 0), true, maxData);
-        series3.appendData(new DataPoint(0, 0), true, maxData);
-        series4.appendData(new DataPoint(0, 0), true, maxData);
         GraphView g1, g2, g3, g4;
-        g1 = findViewById(R.id.g1);
-        g2 = findViewById(R.id.g2);
-        g3 = findViewById(R.id.g3);
-        g4 = findViewById(R.id.g4);
+        g1 =(GraphView) findViewById(R.id.g1);
+        g2 =(GraphView) findViewById(R.id.g2);
+        g3 =(GraphView) findViewById(R.id.g3);
+        g4 =(GraphView) findViewById(R.id.g4);
         g1.addSeries(series);
         g2.addSeries(series2);
         g3.addSeries(series3);
@@ -90,38 +87,49 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
         g4.getViewport().setXAxisBoundsManual(true);
         g4.getViewport().setMinX(0);
         g4.getViewport().setMaxX(maxData);
-        if(sensorList[0]==-1) {
-            l1.setText("");
-            g1.setVisibility(View.INVISIBLE);
+        Sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        lightSensor=Sm.getDefaultSensor(Sensor.TYPE_LIGHT);
+        accelSensor=Sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        proxySensor=Sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        tempSensor =Sm.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+
+        if(lightSensor != null)
+        {
+            Sm.registerListener(this,lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
-        else {
-            l1.setText(sensorNames[sensorList[0]]);
-            sensorViews[0] = series;
+        else
+        {
+            Toast.makeText(this,"light sensor unavailable",Toast.LENGTH_SHORT).show();
         }
-        if(sensorList[1]==-1) {
-            l2.setText("");
-            g2.setVisibility(View.INVISIBLE);
+        if(accelSensor != null)
+        {
+            Sm.registerListener(this,accelSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
-        else {
-            l2.setText(sensorNames[sensorList[1]]);
-            sensorViews[1] = series2;
+        else
+        {
+            Toast.makeText(this,"accel sensor unavailable",Toast.LENGTH_SHORT).show();
         }
-        if(sensorList[2]==-1) {
-            l3.setText("");
-            g3.setVisibility(View.INVISIBLE);
+        if(proxySensor != null)
+        {
+            Sm.registerListener(this,proxySensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
-        else {
-            l3.setText(sensorNames[sensorList[2]]);
-            sensorViews[2] = series3;
+        else
+        {
+            Toast.makeText(this,"proxy sensor unavailable",Toast.LENGTH_SHORT).show();
         }
-        if(sensorList[3]==-1) {
-            l4.setText("");
-            g4.setVisibility(View.INVISIBLE);
+        if(tempSensor != null)
+        {
+            Sm.registerListener(this,tempSensor, SensorManager.SENSOR_DELAY_NORMAL);
+
         }
-        else {
-            l4.setText(sensorNames[sensorList[3]]);
-            sensorViews[3] = series4;
+        else
+        {
+            Toast.makeText(this,"temp sensor unavailable",Toast.LENGTH_SHORT).show();
         }
+        lightValue = (TextView)findViewById(R.id.light);
+        accelValue = (TextView)findViewById(R.id.accel);
+        proxyValue = (TextView)findViewById(R.id.proxy);
+        tempValue  = (TextView)findViewById(R.id.temp);
     }
 
     @Override
@@ -143,22 +151,35 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
 
 
     @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-        if (sensorEvent==null) return;
-        int i = 0;
-        int sensor = sensorEvent.sensor.getType();
-        for (int j: sensorList) {
-            if(sensors[j]==sensor) break;
-            i++;
+    public void onSensorChanged(SensorEvent event) {
+        int sensorType=event.sensor.getType();
+
+        float value;
+        switch(sensorType) {
+            case Sensor.TYPE_LIGHT:
+                series.appendData(new DataPoint(event.values[0],a),true,1000);
+                a++;
+                break;
+            case Sensor.TYPE_ACCELEROMETER:
+                float magnitude;
+                float xval = event.values[0];
+                float yval = event.values[1];
+                float zval = event.values[2];
+                magnitude = (float) Math.sqrt((xval * xval) + (yval * yval) + (zval * zval));
+
+                series.appendData(new DataPoint(event.values[0],b),true,1000);
+                b++;
+                break;
+            case Sensor.TYPE_PROXIMITY:
+                series.appendData(new DataPoint(event.values[0],c),true,1000);
+                c++;
+                break;
+            case Sensor.TYPE_AMBIENT_TEMPERATURE:
+                series.appendData(new DataPoint(event.values[0],d),true,1000);
+                d++;
+                break;
+
         }
-        if(i==4) return;
-        LineGraphSeries<DataPoint> v = sensorViews[i];
-        float x = sensorEvent.values[0];
-        float y = sensorEvent.values[1];
-        float z = sensorEvent.values[2];
-        double mag = Math.sqrt(x*x+y*y+z*z);
-        lastx[i]++;
-        v.appendData(new DataPoint(lastx[i], mag), true, maxData);
     }
 
     @Override
@@ -166,10 +187,5 @@ public class GraphActivity extends AppCompatActivity implements SensorEventListe
 
     }
 
-    public void back(View v) {
-        Intent k = new Intent(GraphActivity.this, MainActivity.class);
-        startActivity(k);
-        finish();
-    }
 
 }
