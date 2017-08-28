@@ -2,12 +2,15 @@ package com.example.lenovo.envotron;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,6 +19,7 @@ public class MainActivity1 extends Activity implements SensorEventListener {
     private SensorManager Sm;
     private Sensor lightSensor,accelSensor,proxySensor,tempSensor;
     private TextView  lightValue,accelValue,proxyValue,tempValue;
+    private Button next;
 
     @Override
     public final void onCreate(Bundle savedInstanceState) {
@@ -27,7 +31,7 @@ public class MainActivity1 extends Activity implements SensorEventListener {
         accelSensor=Sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         proxySensor=Sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         tempSensor =Sm.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
-
+        next =(Button)findViewById(R.id.nextActivity);
         if(lightSensor != null)
         {
             Sm.registerListener(this,lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
@@ -103,7 +107,11 @@ public class MainActivity1 extends Activity implements SensorEventListener {
 
     }
 
-
+    public void connect(View gp)
+    {
+        Intent intent=new Intent(MainActivity1.this,GraphPlot.class);
+        startActivity(intent);
+    }
   /*  @Override
     protected void onResume() {
         // Register a listener for the sensor.
